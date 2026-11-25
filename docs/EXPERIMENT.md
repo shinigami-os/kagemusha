@@ -46,3 +46,9 @@ eDP-1 panel). This file keeps what it taught us. The prototype code is not in th
 | 2560x1440 | 14.7 MB | 2.4 to 5 ms (measured) |
 | 3840x2160 | 33 MB | about 8 to 10 ms (estimated, not measured under load) |
 | 5120x2880 | 59 MB | about 15 ms or more (estimate), too slow for 60 fps |
+
+## EDID generator checked against the kernel (M1, 2026-11-25)
+Eight generated EDIDs (1280x720, 1920x1080, 2560x1440, 3840x2160 at 60, 4096x2160 at 30, 5120x1440, 5120x2880 and
+7680x4320 at 60) were connected to EVDI one after the other and `/sys/class/drm/cardN-DVI-I-1/modes` was read back.
+The kernel listed exactly the requested mode each time, including the DisplayID extension path (everything wider
+than 4095 pixels). `edid-decode` is not packaged on Kira, so the kernel is the reference.

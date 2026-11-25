@@ -71,6 +71,8 @@ No config file in v1. Arguments only.
   machines. Config: `CONFIG_DRM_EVDI=m`. Load it from `runit/1` modprobe list (or on demand by `kagemushad`).
 - **libevdi:** a recipe `kira-libevdi` (rolling or pinned), with the musl `limits.h` patch.
 - **kagemusha:** recipe `kira-kagemusha`, runit service `kagemushad` (a normal service, not a oneshot).
+- **Size cap:** EVDI hard-codes `max_width = 7680` and `max_height = 4320` in `evdi_modeset.c` (lines 544 and 545). The
+  patch must raise them for resolutions beyond 8K. The generator itself goes up to 16384x16384.
 - Open item to check: the module has to be in the kernel before `seatd` opens cards, otherwise nothing changes.
 
 ## Language
@@ -81,7 +83,7 @@ EDID builder), and a static musl binary with no dependencies fits the base.
 | # | What | Done when | Rough size |
 |---|---|---|---|
 | M0 | Repo, notes, name | this document pushed | done |
-| M1 | EDID generator and tests | `edid-decode` accepts 20 modes, golden tests pass | 3 to 5 days |
+| M1 | EDID generator and tests | 28 modes decode correctly, golden values match, the kernel accepts them through EVDI | done 2026-11-25 |
 | M2 | Daemon (single monitor), no compositor glue | `kagemushad` holds a 2K output, frames drained, clean exit | 1 week |
 | M3 | Hyprland glue and `kage up/down` | one command gives a mirrored 2K desktop, `down` restores | 3 to 4 days |
 | M4 | Packaging: patch in Shinigami, recipes, service | installs and works on a clean machine | 3 to 4 days |
