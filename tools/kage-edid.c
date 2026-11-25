@@ -1,4 +1,5 @@
 #include "../src/edid.h"
+#include "../src/mode.h"
 
 #include <errno.h>
 #include <stdio.h>
@@ -9,10 +10,10 @@ int main(int argc, char **argv)
 {
 	struct kg_edid_params p = { 0 };
 	uint8_t e[KG_EDID_MAX_SIZE];
-	unsigned w, h, hz = 60;
+	uint32_t w, h, hz;
 	int len;
 
-	if (argc < 2 || (sscanf(argv[1], "%ux%u@%u", &w, &h, &hz) < 2 && sscanf(argv[1], "%ux%u", &w, &h) != 2)) {
+	if (argc < 2 || kg_parse_mode(argv[1], &w, &h, &hz) < 0) {
 		fprintf(stderr, "usage: %s WxH[@HZ] [NAME] > edid.bin\n", argv[0]);
 		return 2;
 	}
