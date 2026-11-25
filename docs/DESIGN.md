@@ -66,7 +66,7 @@ kage modes                                  presets and the largest mode that st
 No config file in v1. Arguments only.
 
 ## Packaging and kernel
-- **evdi module:** carry it as a Shinigami patch, `patches/compat/0003-evdi.patch`, like acpi_call and tuxedo-drivers.
+- **evdi module (decided 2026-11-25):** carry it as a Shinigami patch, `patches/compat/0003-evdi.patch`, like acpi_call and tuxedo-drivers.
   It then ships with every kernel release, signed with the kernel key, no DKMS and no out-of-tree build on user
   machines. Config: `CONFIG_DRM_EVDI=m`. Load it from `runit/1` modprobe list (or on demand by `kagemushad`).
 - **libevdi:** a recipe `kira-libevdi` (rolling or pinned), with the musl `limits.h` patch.
@@ -74,9 +74,8 @@ No config file in v1. Arguments only.
 - Open item to check: the module has to be in the kernel before `seatd` opens cards, otherwise nothing changes.
 
 ## Language
-Recommendation: **C**. libevdi is C, flux is C, the daemon is small (an event loop, a socket, an EDID builder), and a
-static musl binary with no dependencies fits the base. Rust is the alternative (kokuin-cli is Rust) and would add a
-binding layer for a library that is five functions. To decide with the owner.
+**C**, decided by the owner on 2026-11-25. libevdi is C, flux is C, the daemon is small (an event loop, a socket, an
+EDID builder), and a static musl binary with no dependencies fits the base.
 
 ## Milestones
 | # | What | Done when | Rough size |
@@ -101,7 +100,6 @@ Total to a usable tool: about 3 to 4 weeks. M1 to M3 give a working tool on the 
   (runit `finish`) is needed.
 - evdi is GPL and out of tree upstream. Carrying it as a patch means rebasing on each kernel bump (the Shinigami
   flow C already does this for the other patches).
-- Which part of the stack the owner wants to own: kernel patch inside Shinigami (recommended) or a separate module repo.
 
 ## Rules for this repo
 Follow the standing rules: conventional one-line commits with no attribution, no comments in code unless the why is
