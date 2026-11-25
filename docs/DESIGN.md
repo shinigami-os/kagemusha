@@ -10,7 +10,7 @@ Non-goals: driving a physical panel at a mode it cannot show, HDR, audio over th
 
 ## Architecture
 ```
-kage (CLI) --unix socket--> kagemushad (daemon)
+kage (CLI) --spawns--> kagemushad (daemon, runs as the user)
                               |  EDID generator (pure code)
                               |  libevdi
                               v
@@ -56,6 +56,15 @@ Hyprland first, behind a small interface (`enable(output, mode, scale)`, `mirror
   values saved before `up`.
 - Later: sway/other compositors and `fht-compositor`, same interface.
 
+### 3b. What M3 changed from the first plan
+- No control socket and no always-running service. `kage up` starts `kagemushad` as the user, detached, and records its pid in
+  `$XDG_RUNTIME_DIR/kagemusha/state`. The Hyprland IPC socket belongs to the user session, so a root daemon would have had to
+  guess the session. The evdi device is created once by root at boot (M4), the user only opens it (group `video`).
+- The compositor glue lives in `kage`, not in the daemon (`src/hypr.c`: IPC client, monitor-list parser, rule builder that
+  validates every name before it goes into Lua).
+- `kage down` calls Hyprland's `reload`, which restores the owner's own config (monitors.lua), so no monitor values are saved.
+  Anything changed at runtime with `hyprctl` is reset by it too.
+
 ### 4. CLI `kage`
 ```
 kage up 2560x1440 [--hz 60] [--on eDP-1]    create the virtual monitor and mirror the real one
@@ -85,7 +94,7 @@ EDID builder), and a static musl binary with no dependencies fits the base.
 | M0 | Repo, notes, name | this document pushed | done |
 | M1 | EDID generator and tests | 28 modes decode correctly, golden values match, the kernel accepts them through EVDI | done 2026-11-25 |
 | M2 | Daemon (single monitor), no compositor glue | `kagemushad` holds a 2K output, frames drained, clean exit | done 2026-11-25 |
-| M3 | Hyprland glue and `kage up/down` | one command gives a mirrored 2K desktop, `down` restores | 3 to 4 days |
+| M3 | Hyprland glue and `kage up/down` | one command gives a mirrored 2K desktop, `down` restores | done 2026-11-25 |
 | M4 | Packaging: patch in Shinigami, recipes, service | installs and works on a clean machine | 3 to 4 days |
 | M5 | Large modes (DisplayID), polish, notes | 5K accepted, docs written | 1 week |
 
@@ -99,6 +108,8 @@ Total to a usable tool: about 3 to 4 weeks. M1 to M3 give a working tool on the 
   has to go away (dmabuf path), which means work in the module or a different virtual-output driver.
 - The idle desktop sends full frames at 16 to 20 per second. Cause not found (something in the shell repaints). Not
   caused by kagemusha, but it costs a copy each time.
+- The Line's shell (Quickshell) restarted itself once during the first of three up/down cycles (its launcher restarts it when
+  it dies from a signal). Not reproduced in the next two. Unknown whether a screen appearing or disappearing triggers it.
 - Hyprland multi-GPU handling of a third (virtual) card. It worked here without a crash, but the log shows page-flip
   warnings, 6 in one run.
 - If the daemon dies while mirrored, the real screen keeps the mirror rule. `restore()` from a service supervisor hook

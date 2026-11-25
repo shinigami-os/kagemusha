@@ -89,3 +89,11 @@ What this says:
   rate, as the in-kernel VKMS driver does. That belongs in the Shinigami patch (M4), not in the daemon.
 - Instrumentation that helped: per grab, time held waiting for the slot, and time the compositor needed to produce the
   next frame after the previous grab (about 9 ms normally, 20 ms under stress once paced).
+
+## kage up and down on the live session (M3, 2026-11-25)
+- `kage up 2560x1440@60`: 106 ms to a mirrored desktop. Windows were laid out at 2534x1362 on `DVI-I-1` at scale 1.00.
+- A second `kage up` refuses ("already up"). `kage down` took 62 ms, the daemon was gone, the state file was removed, eDP-1 was back at
+  1920x1080 with its windows at their old size. A second `kage down` says "not up" and exits 0.
+- Bad input never touches the screen: 63x63 (out of range), an unknown `--on` output, garbage, an unknown subcommand.
+- The Line (Quickshell) restarted once during the first up/down cycle (its launcher brought it back within about a second). Three cycles
+  in total, the other two with a one-second sampling of its process ids: no restart. Cause not found.
