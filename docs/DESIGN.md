@@ -93,8 +93,8 @@ Total to a usable tool: about 3 to 4 weeks. M1 to M3 give a working tool on the 
 
 ## Risks and open questions
 - The output is not paced: under a continuously redrawing window the compositor flips at about 80 per second on a 60 Hz
-  mode, which costs CPU for nothing (daemon 36% of a core, Hyprland 21%). Pacing the next `evdi_request_update()` to
-  the refresh period would cut that. Not done yet.
+  mode (daemon 36% of a core, Hyprland 21%). Pacing from the daemon and skipping the copy were both tried and both
+  made it worse (EXPERIMENT.md). The fix is a vblank timer in the evdi patch (M4).
 - Per-frame CPU copy limits large modes (see the table in EXPERIMENT.md). If 4K at 60 fps is wanted later, the copy
   has to go away (dmabuf path), which means work in the module or a different virtual-output driver.
 - The idle desktop sends full frames at 16 to 20 per second. Cause not found (something in the shell repaints). Not

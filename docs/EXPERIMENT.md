@@ -68,3 +68,24 @@ Stopping the daemon while mirrored and under stress: with SIGTERM Hyprland answe
 39 ms, and in both cases it dropped the virtual output and fell back to eDP-1 on its own. No freeze. (The freeze seen
 earlier came from a client that stayed alive and did not drain frames.)
 The flip rate is above the 60 Hz of the mode because nothing paces `evdi_request_update()`.
+
+## Pacing and no-copy experiments (2026-11-25), both rejected
+Goal: stop the compositor flipping about 80 times a second on a 60 Hz mode. Same live test as above (2560x1440,
+mirrored, continuously redrawing terminal).
+
+| Variant | stress fps | daemon CPU | result |
+|---|---|---|---|
+| unpaced, full copy (the committed daemon) | 80 to 82 | 36% of a core | smooth, wasteful |
+| hold each grab until one period after the previous grab started | 37 to 47 | 22% | below 60 fps |
+| same on a fixed grid (each slot one period after the last) | 60 while the desktop is light, then 40 | 18% | drops under load |
+| no copy: register a 1x1 buffer, the grab fails and the kernel still sends the flip | 40 | about 0% | idle runs away at 5,000 to 10,000 flips per second, Hyprland at 80% of a core |
+
+What this says:
+- The kernel sends the vblank at `err_fb:` even when the grab fails (`evdi_painter.c`, grab ioctl), so a flip does
+  not need the pixel copy. But a flip that completes instantly makes Hyprland re-render without limit.
+- Delaying flips from userspace makes the 60 Hz flip clock drift against the real panel's 60 Hz clock, and a missed slot
+  costs half a frame (40 fps). That is why the unpaced version looked smoother.
+- EVDI has no vblank emulation. The proper fix is in the module: complete flips on an hrtimer at the mode's refresh
+  rate, as the in-kernel VKMS driver does. That belongs in the Shinigami patch (M4), not in the daemon.
+- Instrumentation that helped: per grab, time held waiting for the slot, and time the compositor needed to produce the
+  next frame after the previous grab (about 9 ms normally, 20 ms under stress once paced).
