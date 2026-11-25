@@ -52,3 +52,19 @@ Eight generated EDIDs (1280x720, 1920x1080, 2560x1440, 3840x2160 at 60, 4096x216
 7680x4320 at 60) were connected to EVDI one after the other and `/sys/class/drm/cardN-DVI-I-1/modes` was read back.
 The kernel listed exactly the requested mode each time, including the DisplayID extension path (everything wider
 than 4095 pixels). `edid-decode` is not packaged on Kira, so the kernel is the reference.
+
+## The daemon under a live compositor (M2, 2026-11-25)
+`kagemushad 2560x1440@60` with Hyprland mirroring eDP-1 onto the virtual output, idle then under a continuously
+redrawing terminal:
+
+| | idle | stress |
+|---|---|---|
+| daemon CPU | 3% of a core | 36% |
+| Hyprland CPU | 6% | 21% |
+| frames per second | 16 to 60 (damage driven) | 80 to 82 |
+| copy per frame | n/a | 4.3 to 4.5 ms, 1.2 GB/s |
+
+Stopping the daemon while mirrored and under stress: with SIGTERM Hyprland answered IPC after 44 ms, with SIGKILL after
+39 ms, and in both cases it dropped the virtual output and fell back to eDP-1 on its own. No freeze. (The freeze seen
+earlier came from a client that stayed alive and did not drain frames.)
+The flip rate is above the 60 Hz of the mode because nothing paces `evdi_request_update()`.
