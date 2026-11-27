@@ -4,7 +4,7 @@ A decoy screen for Kira Linux. It makes every app believe the screen has any res
 ultrawide), then scales the result down onto the real panel, including an integrated laptop screen.
 
 Status: M1 (EDID generator), M2 (the `kagemushad` daemon) and M3 (Hyprland glue and the `kage` command) work on the
-dev machine. Packaging (the evdi kernel patch, recipes, device creation at boot) is M4. The idea was
+dev machine. Packaging (M4) is written: the evdi patch is in Shinigami, the recipes are `kira-libevdi` and `kira-kagemusha` in flux-recipes. The idea was
 proven with a throwaway prototype, see [docs/EXPERIMENT.md](docs/EXPERIMENT.md). The plan is in
 [docs/DESIGN.md](docs/DESIGN.md).
 

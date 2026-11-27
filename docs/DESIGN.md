@@ -75,11 +75,15 @@ kage modes                                  presets and the largest mode that st
 No config file in v1. Arguments only.
 
 ## Packaging and kernel
-- **evdi module (decided 2026-11-25):** carry it as a Shinigami patch, `patches/compat/0003-evdi.patch`, like acpi_call and tuxedo-drivers.
-  It then ships with every kernel release, signed with the kernel key, no DKMS and no out-of-tree build on user
-  machines. Config: `CONFIG_DRM_EVDI=m`. Load it from `runit/1` modprobe list (or on demand by `kagemushad`).
-- **libevdi:** a recipe `kira-libevdi` (rolling or pinned), with the musl `limits.h` patch.
-- **kagemusha:** recipe `kira-kagemusha`, runit service `kagemushad` (a normal service, not a oneshot).
+- **evdi module (decided 2026-11-25):** carried as a Shinigami patch, `patches/compat/0003-evdi.patch`, like acpi_call and
+  tuxedo-drivers: sources in `drivers/gpu/drm/evdi/`, `CONFIG_DRM_EVDI=m`. It ships with every kernel release, signed with the
+  kernel key, no DKMS. Changes against upstream: a vblank timer (flips complete at the mode's refresh rate through the DRM
+  helper of 7.x, switchable with the module parameter `vblank_timer`) and a size cap of 16384. `evdi_detect.h` is a static
+  copy of upstream's build-time probe output and is regenerated at each kernel base upgrade.
+- **Device at boot:** the recipe `kira-kagemusha` ships the runit service `kagemusha-evdi`: `modprobe evdi initial_device_count=1`,
+  then it sleeps forever. Not a oneshot (a recipe-shipped oneshot runs only once, `/etc/runit/2` re-enables two named ones).
+- **libevdi:** the recipe `kira-libevdi`, pinned to the commit the module was imported from (tarball hash), with the musl `limits.h` fix.
+- **kagemusha:** the recipe `kira-kagemusha` (rolling from main; it needs this repo to be public). `kagemushad` is started by `kage up`, not by runit.
 - **Size cap:** EVDI hard-codes `max_width = 7680` and `max_height = 4320` in `evdi_modeset.c` (lines 544 and 545). The
   patch must raise them for resolutions beyond 8K. The generator itself goes up to 16384x16384.
 - Open item to check: the module has to be in the kernel before `seatd` opens cards, otherwise nothing changes.
@@ -95,7 +99,7 @@ EDID builder), and a static musl binary with no dependencies fits the base.
 | M1 | EDID generator and tests | 28 modes decode correctly, golden values match, the kernel accepts them through EVDI | done 2026-11-25 |
 | M2 | Daemon (single monitor), no compositor glue | `kagemushad` holds a 2K output, frames drained, clean exit | done 2026-11-25 |
 | M3 | Hyprland glue and `kage up/down` | one command gives a mirrored 2K desktop, `down` restores | done 2026-11-25 |
-| M4 | Packaging: patch in Shinigami, recipes, service | installs and works on a clean machine | 3 to 4 days |
+| M4 | Packaging: patch in Shinigami, recipes, service | installs and works on a clean machine | written 2026-11-27, not yet run on a kernel that carries evdi |
 | M5 | Large modes (DisplayID), polish, notes | 5K accepted, docs written | 1 week |
 
 Total to a usable tool: about 3 to 4 weeks. M1 to M3 give a working tool on the dev machine in about 2 weeks.
